@@ -1,16 +1,17 @@
 [workspace]
 channels = ["conda-forge"]
 name = "GoCoPP"
-platforms = ["linux-64", "win-64", "osx-64", "osx-arm64"]
+platforms = ["linux-64", "linux-aarch64", "win-64", "osx-64", "osx-arm64"]
 version = "0.1.0"
 preview = ["pixi-build"]
+license = "BSD-3-Clause"
 
 [package]
 name = "gocopp"
 version = "0.1.0"
-publish = true  # This enables publishing
+publish = true
 description = "Finding Good Configurations of Planar Primitives in Unorganized Point Clouds"
-homepage = "https://hal.inria.fr/hal-03621896"
+homepage = "https://github.com/alexandre-bry/GoCoPP"
 license = "BSD-3-Clause"
 
 [package.build]
@@ -23,8 +24,8 @@ eigen = ">=3.4.0,<4"
 gxx = ">=16.2.0,<16.3"
 
 [activation.env]
-CPP_DIR = "$PIXI_PROJECT_ROOT"
-EXECUTABLE_PATH = "$CPP_DIR/bin/Release/GoCoPP"
+CPP_DIR = "$PIXI_PROJECT_ROOT/GoCoPP"
+EXECUTABLE_PATH = "$CPP_DIR/build/bin/Release/gocopp"
 
 [tasks]
 clean = { cmd = "cd \"$INIT_CWD\" && rm -rf $CPP_DIR/build", cwd = ".", description = "Delete the build directory." }

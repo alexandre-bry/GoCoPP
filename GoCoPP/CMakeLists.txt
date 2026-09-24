@@ -3,33 +3,52 @@ project(GoCoPP LANGUAGES CXX)
 
 set(EXECUTABLE_OUTPUT_PATH bin/${CMAKE_BUILD_TYPE})
 
-# Find Eigen3 FIRST (before CGAL and Boost)
-# Check common conda/pixi locations for Eigen3
-set(EIGEN3_POSSIBLE_PATHS
-    "$ENV{PREFIX}/include/eigen3"
-    "$ENV{PIXI_ENV_PREFIX}/include/eigen3"
-    "/usr/include/eigen3"
-    "/usr/local/include/eigen3"
-)
-
-# Find the first existing path
-foreach(path IN LISTS EIGEN3_POSSIBLE_PATHS)
-    if(EXISTS "${path}/Eigen/Core")
-        set(EIGEN3_INCLUDE_DIR "${path}")
-        break()
-    endif()
-endforeach()
-
-if(NOT EIGEN3_INCLUDE_DIR)
-    message(FATAL_ERROR "Eigen3 not found in any standard location")
+# Boost installation policy
+if(POLICY CMP0167)
+  cmake_policy(SET CMP0167 NEW)
 endif()
 
-message(STATUS "Using Eigen3 from: ${EIGEN3_INCLUDE_DIR}")
-include_directories(${EIGEN3_INCLUDE_DIR})
+# ---------- Eigen ----------
 
-# Set this so CGAL's finder doesn't try to find Eigen again
+# Method 1: Try CMake's config mode first (preferred for conda/pixi)
+find_package(Eigen3 3.4 QUIET CONFIG)
+
+if(NOT Eigen3_FOUND)
+    # Method 2: Try module mode
+    find_package(Eigen3 3.4 QUIET NO_MODULE)
+endif()
+
+if(NOT Eigen3_FOUND)
+    # Method 3: Manual search for pixi/conda environments
+    set(EIGEN3_POSSIBLE_PATHS
+        "${CMAKE_SOURCE_DIR}/.pixi/envs/default/include/eigen3"  # pixi local env
+        "$ENV{PIXI_ENV_PREFIX}/include/eigen3"                      # pixi env prefix
+        "$ENV{PREFIX}/include/eigen3"                              # conda env
+        "/usr/include/eigen3"
+        "/usr/local/include/eigen3"
+    )
+
+    foreach(path IN LISTS EIGEN3_POSSIBLE_PATHS)
+        if(EXISTS "${path}/Eigen/Core")
+            set(EIGEN3_INCLUDE_DIRS "${path}")
+            set(EIGEN3_FOUND TRUE)
+            break()
+        endif()
+    endforeach()
+endif()
+
+if(NOT Eigen3_FOUND)
+    message(FATAL_ERROR "Eigen3 not found. Install with: pixi add eigen")
+endif()
+
+message(STATUS "Using Eigen3 from: ${EIGEN3_INCLUDE_DIRS}")
+include_directories(${EIGEN3_INCLUDE_DIRS})
+
+# Prevent CGAL from searching for Eigen3 again
 set(EIGEN3_FOUND TRUE)
-set(EIGEN3_VERSION "3.4.0")  # Explicit version to satisfy CGAL
+set(EIGEN3_VERSION "3.4.0")
+
+# ---------- Boost ----------
 
 # Find Boost
 find_package(Boost 1.76 REQUIRED COMPONENTS filesystem system)
@@ -41,7 +60,8 @@ else()
     message(FATAL_ERROR "Boost not found")
 endif()
 
-# Find CGAL - it will use the already-found Eigen3
+# ---------- CGAL ----------
+
 find_package(CGAL REQUIRED)
 if(CGAL_FOUND)
     include(${CGAL_USE_FILE})
@@ -71,4 +91,5 @@ else()
 endif()
 
 # Install the executable
+set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME gocopp)
 install(TARGETS ${PROJECT_NAME} DESTINATION bin)

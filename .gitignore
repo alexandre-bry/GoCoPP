@@ -3,4 +3,5 @@
 /.vscode/
 /GoCoPP/build/
 /GoCoPP/bin/
-/GoCoPP/package_to_publish/
+/package_to_publish/
+/data samples/output/

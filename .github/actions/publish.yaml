@@ -1,6 +1,7 @@
 # Example GitHub Actions workflow
 name: Build and Publish
-# on: [push]
+on: [push]
+environment: Publish
 
 jobs:
   build-linux:
@@ -8,18 +9,26 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: prefix-dev/setup-pixi@v1
-      - run: pixi publish --target-platform linux-64 --target-channel https://prefix.dev/alexandre-bry/abry
+      - run: |
+          pixi publish --target-platform linux-64 --target-dir ./package_to_publish
+          pixi publish --target-platform linux-aarch64 --target-dir ./package_to_publish
+          pixi upload prefix --channel alexandre-bry/publish ./package_to_publish/*.conda --api-key $PREFIX_API_KEY
 
   build-windows:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
       - uses: prefix-dev/setup-pixi@v1
-      - run: pixi publish --target-platform win-64 --target-channel https://prefix.dev/alexandre-bry/abry
+      - run: |
+          pixi publish --target-platform win-64 --target-dir ./package_to_publish
+          pixi upload prefix --channel alexandre-bry/publish ./package_to_publish/*.conda --api-key $PREFIX_API_KEY
 
   build-macos:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
       - uses: prefix-dev/setup-pixi@v1
-      - run: pixi publish --target-platform osx-64 --target-channel https://prefix.dev/alexandre-bry/abry
+      - run: |
+          pixi publish --target-platform osx-64 --target-dir ./package_to_publish
+          pixi publish --target-platform osx-arm64 --target-dir ./package_to_publish
+          pixi upload prefix --channel alexandre-bry/publish ./package_to_publish/*.conda --api-key $PREFIX_API_KEY
