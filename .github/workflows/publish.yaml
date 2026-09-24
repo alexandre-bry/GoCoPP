@@ -1,11 +1,11 @@
 # Example GitHub Actions workflow
-name: Build and Publish
+name: Build and Publish to prefix.dev
 on: [push]
-environment: Publish
 
 jobs:
   build-linux:
     runs-on: ubuntu-latest
+    environment: Publish
     steps:
       - uses: actions/checkout@v4
       - uses: prefix-dev/setup-pixi@v1
@@ -16,6 +16,7 @@ jobs:
 
   build-windows:
     runs-on: windows-latest
+    environment: Publish
     steps:
       - uses: actions/checkout@v4
       - uses: prefix-dev/setup-pixi@v1
@@ -25,6 +26,7 @@ jobs:
 
   build-macos:
     runs-on: macos-latest
+    environment: Publish
     steps:
       - uses: actions/checkout@v4
       - uses: prefix-dev/setup-pixi@v1
