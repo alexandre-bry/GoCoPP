@@ -8,29 +8,38 @@ jobs:
     environment: Publish
     steps:
       - uses: actions/checkout@v4
-      - uses: prefix-dev/setup-pixi@v1
+      - uses: prefix-dev/setup-pixi@v0.10.0
+        with:
+          pixi-version: v0.81.0
+          cache: true
       - run: |
           pixi publish --target-platform linux-64 --target-dir ./package_to_publish
           pixi publish --target-platform linux-aarch64 --target-dir ./package_to_publish
-          pixi upload prefix --channel alexandre-bry/publish ./package_to_publish/*.conda --api-key $PREFIX_API_KEY
+          pixi upload prefix --channel alexandre-bry/publish ./package_to_publish/*.conda --api-key ${{ secrets.PREFIX_API_KEY }}
 
   build-windows:
     runs-on: windows-latest
     environment: Publish
     steps:
       - uses: actions/checkout@v4
-      - uses: prefix-dev/setup-pixi@v1
+      - uses: prefix-dev/setup-pixi@v0.10.0
+        with:
+          pixi-version: v0.81.0
+          cache: true
       - run: |
           pixi publish --target-platform win-64 --target-dir ./package_to_publish
-          pixi upload prefix --channel alexandre-bry/publish ./package_to_publish/*.conda --api-key $PREFIX_API_KEY
+          pixi upload prefix --channel alexandre-bry/publish ./package_to_publish/*.conda --api-key ${{ secrets.PREFIX_API_KEY }}
 
   build-macos:
     runs-on: macos-latest
     environment: Publish
     steps:
       - uses: actions/checkout@v4
-      - uses: prefix-dev/setup-pixi@v1
+      - uses: prefix-dev/setup-pixi@v0.10.0
+        with:
+          pixi-version: v0.81.0
+          cache: true
       - run: |
           pixi publish --target-platform osx-64 --target-dir ./package_to_publish
           pixi publish --target-platform osx-arm64 --target-dir ./package_to_publish
-          pixi upload prefix --channel alexandre-bry/publish ./package_to_publish/*.conda --api-key $PREFIX_API_KEY
+          pixi upload prefix --channel alexandre-bry/publish ./package_to_publish/*.conda --api-key ${{ secrets.PREFIX_API_KEY }}
