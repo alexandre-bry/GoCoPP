@@ -1,4 +1,5 @@
 ﻿#pragma once
+#include <optional>
 #define CGAL_EIGEN3_ENABLED
 #include "defs.h"
 #include "defs_cgal_ui.h"
@@ -6,7 +7,7 @@
 
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Point_with_normal_3.h>
-#include <CGAL/Shape_detection_3.h>
+#include <CGAL/Shape_detection.h>
 #include <CGAL/property_map.h>
 #include <CGAL/Surface_mesh.h>
 #include <fstream>
@@ -50,7 +51,7 @@ typedef std::vector<Point_with_normal> Pwn_vector;
 typedef CGAL::First_of_pair_property_map<Point_with_normal> Point_map;
 typedef CGAL::Second_of_pair_property_map<Point_with_normal> Normal_map;
 
-typedef CGAL::Shape_detection_3::Shape_detection_traits
+typedef CGAL::Shape_detection::Shape_detection_traits
 <CGAL::Exact_predicates_inexact_constructions_kernel, Pwn_vector, Point_map, Normal_map> Traits;
 typedef CGAL::Exact_predicates_inexact_constructions_kernel::Point_3 Inexact_Point_3;
 
@@ -95,7 +96,7 @@ class Shape_Detector
 
 
 public:
-	Shape_Detector(const std::string & _filename);
+	Shape_Detector(const std::string & _filename, const std::optional<std::string> &_output_file);
 
 	~Shape_Detector();
 
@@ -247,6 +248,7 @@ protected:
 	std::string path_point_cloud;
 	std::string path_point_cloud_basename;
 	std::string path_point_cloud_extension;
+	std::optional<std::string> path_output;
 
 	Pwn_vector points;
 

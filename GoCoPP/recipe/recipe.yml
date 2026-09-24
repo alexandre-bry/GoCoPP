@@ -1,0 +1,72 @@
+context:
+  name: gocopp
+  version: 0.1.0
+
+package:
+  name: gocopp
+  version: 0.1.0
+
+source:
+  path: ../
+
+build:
+  number: 0
+  script: |
+    # ===================================================================
+    # Apply CGAL patch for Boost 1.86+ compatibility
+    # ===================================================================
+    CGAL_ITERATOR_H="$PREFIX/include/CGAL/boost/graph/iterator.h"
+
+    if [ -f "$CGAL_ITERATOR_H" ]; then
+      # Check if already patched
+      if ! grep -q "return (g != nullptr)" "$CGAL_ITERATOR_H"; then
+        echo "Patching CGAL for Boost 1.86+ compatibility..."
+        sed -i 's/return (! (this->base() == nullptr));/return (g != nullptr);/g' "$CGAL_ITERATOR_H"
+        echo "CGAL patched successfully!"
+      else
+        echo "CGAL already patched"
+      fi
+    else
+      echo "Warning: CGAL iterator.h not found at $CGAL_ITERATOR_H"
+    fi
+
+    # ===================================================================
+    # Build the project
+    # ===================================================================
+
+    # Create build directory
+    rm -rf package_build
+    mkdir -p package_build
+    cd package_build
+
+    # Configure with CMake
+    cmake .. \
+      -DCMAKE_BUILD_TYPE=Release \
+      -DCMAKE_INSTALL_PREFIX=$PREFIX \
+      -DCMAKE_PREFIX_PATH=$PREFIX
+
+    # Build
+    cmake --build . --config Release
+
+    # Install
+    cmake --install . --prefix $PREFIX
+
+requirements:
+  build:
+    - cmake >=3.10
+    - ${{ compiler('cxx') }}
+    - make  # [unix]
+  host:
+    - cgal >=5.6,<6
+    - eigen >=3.4.0,<4
+    - boost-cpp >=1.76
+  run:
+    - cgal >=5.6,<6
+    - eigen >=3.4.0,<4
+    - boost-cpp >=1.76
+
+about:
+  summary: Finding Good Configurations of Planar Primitives in Unorganized Point Clouds
+  homepage: https://hal.inria.fr/hal-03621896
+  license: BSD-3-Clause
+  # license_file: LICENSE

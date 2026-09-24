@@ -8,9 +8,11 @@
 
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
+#include <filesystem>
+#include <optional>
 #include <random>
 
-Shape_Detector::Shape_Detector(const std::string & _filename)
+Shape_Detector::Shape_Detector(const std::string & _filename, const std::optional<std::string> &_output_file)
 {
 	number_of_insert_exclude = 10;
 	number_iterations = 0;
@@ -19,7 +21,8 @@ Shape_Detector::Shape_Detector(const std::string & _filename)
 	interval_all = 0;
 	path_point_cloud = _filename;
 	path_point_cloud_basename = boost::filesystem::path(path_point_cloud).stem().string();
-	path_point_cloud_extension = boost::filesystem::extension(path_point_cloud);
+	path_point_cloud_extension = boost::filesystem::path(path_point_cloud).extension().string();
+	path_output = _output_file;
 
 	lambda_r = 1.0;
 	weight_mode = 0;
@@ -185,6 +188,10 @@ void Shape_Detector::to_vg()
 
 			
 				std::string filename = "./" + path_point_cloud_basename + "_planar_primitives_detection.vg";
+				if (path_output) {
+					filename = *path_output;
+					std::filesystem::create_directories(std::filesystem::path(filename).parent_path());
+				}
 				std::ofstream stream(filename, std::ios::out);
 
 				// Step 3.3.1
@@ -460,6 +467,10 @@ void Shape_Detector::save_convex_hull() {
 	}
 
 	std::string filename = "./" + path_point_cloud_basename + "_convex_hull.ply";
+	if (path_output) {
+		filename = *path_output;
+		std::filesystem::create_directories(std::filesystem::path(filename).parent_path());
+	}
 	std::ofstream stream(filename, std::ios::out);
 	if (!stream.is_open()) {
 		throw std::ios_base::failure("Error : cannot write into an output file");
@@ -532,6 +543,10 @@ void Shape_Detector::save_alpha_shapes() {
 		}
 
 	std::string filename = "./" + path_point_cloud_basename + "_alpha_shape.ply";
+	if (path_output) {
+		filename = *path_output;
+		std::filesystem::create_directories(std::filesystem::path(filename).parent_path());
+	}
 	std::ofstream stream(filename, std::ios::out);
 	if (!stream.is_open()) {
 		throw std::ios_base::failure("Error : cannot write into an output file");

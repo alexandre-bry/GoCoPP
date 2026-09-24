@@ -1,0 +1,39 @@
+[workspace]
+channels = ["conda-forge"]
+name = "GoCoPP"
+platforms = ["linux-64", "win-64", "osx-64", "osx-arm64"]
+version = "0.1.0"
+preview = ["pixi-build"]
+
+[package]
+name = "gocopp"
+version = "0.1.0"
+publish = true  # This enables publishing
+description = "Finding Good Configurations of Planar Primitives in Unorganized Point Clouds"
+homepage = "https://hal.inria.fr/hal-03621896"
+license = "BSD-3-Clause"
+
+[package.build]
+backend = { name = "pixi-build-rattler-build", version = "*" }
+
+[dependencies]
+cgal = ">=5.6,<6"
+cmake = ">=3.10,<4"
+eigen = ">=3.4.0,<4"
+gxx = ">=16.2.0,<16.3"
+
+[activation.env]
+CPP_DIR = "$PIXI_PROJECT_ROOT"
+EXECUTABLE_PATH = "$CPP_DIR/bin/Release/GoCoPP"
+
+[tasks]
+clean = { cmd = "cd \"$INIT_CWD\" && rm -rf $CPP_DIR/build", cwd = ".", description = "Delete the build directory." }
+_setup_env = { cmd = "bash $PIXI_PROJECT_ROOT/setup_environment.sh", cwd = ".", description = "Setup environment (apply CGAL patch for Boost 1.86+ compatibility)" }
+_cmake = { cmd = "cd \"$INIT_CWD\" && cmake -B $CPP_DIR/build -S $CPP_DIR -DCMAKE_BUILD_TYPE=Release -DCMAKE_EXPORT_COMPILE_COMMANDS=1 -Wno-dev", depends-on = ["_setup_env"] }
+build = { cmd = "cd \"$INIT_CWD\" && cmake --build $CPP_DIR/build", cwd = ".", depends-on = [
+    "_cmake",
+], description = "Build the C++ project." }
+run = { cmd = "cd \"$INIT_CWD\" && $EXECUTABLE_PATH", cwd = ".", depends-on = [
+    "build",
+], description = "Compiles and run the C++ command with subcommands and arguments.\n\tYou can use `pixi run run --help` to get a list of available commands." }
+run-only = { cmd = "cd \"$INIT_CWD\" && $EXECUTABLE_PATH", cwd = ".", description = "Run the C++ command with subcommands and arguments.\n\tYou can use `pixi run run-only --help` to get a list of available commands." }

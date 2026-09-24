@@ -1,0 +1,6 @@
+.pixi/
+.cache/
+/.vscode/
+/GoCoPP/build/
+/GoCoPP/bin/
+/GoCoPP/package_to_publish/

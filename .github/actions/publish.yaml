@@ -1,0 +1,25 @@
+# Example GitHub Actions workflow
+name: Build and Publish
+# on: [push]
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: prefix-dev/setup-pixi@v1
+      - run: pixi publish --target-platform linux-64 --target-channel https://prefix.dev/alexandre-bry/abry
+
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: prefix-dev/setup-pixi@v1
+      - run: pixi publish --target-platform win-64 --target-channel https://prefix.dev/alexandre-bry/abry
+
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: prefix-dev/setup-pixi@v1
+      - run: pixi publish --target-platform osx-64 --target-channel https://prefix.dev/alexandre-bry/abry

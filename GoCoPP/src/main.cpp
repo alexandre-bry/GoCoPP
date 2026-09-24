@@ -6,6 +6,11 @@
 
 int main(int argc, char *argv[])
 {
+	if (argc < 2) {
+		std::cout << "Usage: " << argv[0] << " <input_file> [options]" << std::endl;
+	}
+	std::string path_point_cloud = argv[1];
+	std::optional<std::string> path_output = std::nullopt;
 	
 	double pd_epsilon = 0;
 	char parameter[1024];
@@ -17,7 +22,6 @@ int main(int argc, char *argv[])
 	double pd_c = 1;
 	double pd_s = 1;
 	std::string pd_norm = "hybrid";
-	std::string path_point_cloud = argv[1];
 	bool pd_out_vg = false;
 	bool pd_out_alpha_shape = true;
 	bool pd_out_convex_hull = false;
@@ -28,7 +32,13 @@ int main(int argc, char *argv[])
 	bool pd_if_constraint = false;
 	int pd_weight_mode = 0;
 	while (rr < argc) {
-		if (!strcmp(argv[rr], "--epsilon") && rr + 1 < argc) {
+		if (!strcmp(argv[rr], "--output") && rr + 1 < argc) {
+			path_output = argv[rr + 1];
+			
+
+			rr += 2;
+		}
+		else if (!strcmp(argv[rr], "--epsilon") && rr + 1 < argc) {
 			pd_epsilon = atof(argv[rr + 1]);
 			
 
@@ -120,14 +130,13 @@ int main(int argc, char *argv[])
 	
 	
 
-	std::string path_point_cloud_basename = boost::filesystem::path(path_point_cloud).stem().string();
 	if (!boost::filesystem::exists(path_point_cloud)) {
 		std::cout << "Can not find the file." << std::endl << std::endl;
 			
 		return 0;
 	}
 
-	CS = new Shape_Detector(path_point_cloud);
+	CS = new Shape_Detector(path_point_cloud, path_output);
 	CS->set_detection_parameters(pd_sigma,  pd_nn, pd_normal_deviation);
 	
 	CS->set_max_steps(stop_iterations);
