@@ -29,7 +29,7 @@ EXECUTABLE_PATH = "$CPP_DIR/build/bin/Release/gocopp"
 
 [tasks]
 clean = { cmd = "cd \"$INIT_CWD\" && rm -rf $CPP_DIR/build", cwd = ".", description = "Delete the build directory." }
-_setup_env = { cmd = "bash $PIXI_PROJECT_ROOT/setup_environment.sh", cwd = ".", description = "Setup environment (apply CGAL patch for Boost 1.86+ compatibility)" }
+_setup_env = { cmd = "bash $PIXI_PROJECT_ROOT/recipe/patch_cgal.sh", cwd = ".", description = "Setup environment (apply CGAL patch for Boost 1.86+ compatibility)" }
 _cmake = { cmd = "cd \"$INIT_CWD\" && cmake -B $CPP_DIR/build -S $CPP_DIR -DCMAKE_BUILD_TYPE=Release -DCMAKE_EXPORT_COMPILE_COMMANDS=1 -Wno-dev", depends-on = ["_setup_env"] }
 build = { cmd = "cd \"$INIT_CWD\" && cmake --build $CPP_DIR/build", cwd = ".", depends-on = [
     "_cmake",

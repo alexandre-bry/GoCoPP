@@ -1,7 +1,3 @@
-# context:
-#   name: gocopp
-#   version: 0.1.0
-
 package:
   name: gocopp
   version: 0.1.0
@@ -12,49 +8,19 @@ source:
 build:
   number: 0
   script: |
-    # ===================================================================
-    # Apply CGAL patch for Boost 1.86+ compatibility
-    # ===================================================================
-    CGAL_ITERATOR_H="$PREFIX/include/CGAL/boost/graph/iterator.h"
+    # Apply patch with Python (cross-platform)
+    python "recipe/patch_cgal.py" || echo "CGAL patch skipped"
 
-    if [ -f "$CGAL_ITERATOR_H" ]; then
-      # Check if already patched
-      if ! grep -q "return (g != nullptr)" "$CGAL_ITERATOR_H"; then
-        echo "Patching CGAL for Boost 1.86+ compatibility..."
-        sed -i 's/return (! (this->base() == nullptr));/return (g != nullptr);/g' "$CGAL_ITERATOR_H"
-        echo "CGAL patched successfully!"
-      else
-        echo "CGAL already patched"
-      fi
-    else
-      echo "Warning: CGAL iterator.h not found at $CGAL_ITERATOR_H"
-    fi
-
-    # ===================================================================
-    # Build the project
-    # ===================================================================
-
-    # Create build directory
-    rm -rf package_build
-    mkdir -p package_build
-    cd package_build
-
-    # Configure with CMake
-    cmake .. \
-      -DCMAKE_BUILD_TYPE=Release \
-      -DCMAKE_INSTALL_PREFIX=$PREFIX \
-      -DCMAKE_PREFIX_PATH=$PREFIX
-
-    # Build
-    cmake --build . --config Release
-
-    # Install
-    cmake --install . --prefix $PREFIX
+    # Build with CMake (cross-platform)
+    cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$PREFIX
+    cmake --build build --config Release
+    cmake --install build --prefix $PREFIX
 
 requirements:
   build:
     - cmake >=3.10
     - ${{ compiler('cxx') }}
+    - python  # Required for cross-platform patching
     - make  # [unix]
   host:
     - cgal >=5.6,<6
@@ -70,5 +36,4 @@ about:
   license: BSD-3-Clause
   license_file: LICENSE
   summary: Finding Good Configurations of Planar Primitives in Unorganized Point Clouds
-  description: We present an algorithm for detecting planar primitives from unorganized 3D point clouds. Departing from an initial configuration, the algorithm refines both the continuous plane parameters and the discrete assignment of input points to them by seeking high fidelity, high simplicity and high completeness. Our key contribution relies upon the design of an exploration mechanism guided by a multiobjective energy function. The transitions within the large solution space are handled by five geometric operators that create, remove and modify primitives. We demonstrate the potential of our method on a variety of scenes, from organic shapes to man-made objects, and sensors, from multiview stereo to laser. We show its efficacy with respect to existing primitive fitting approaches and illustrate its applicative interest in compact mesh reconstruction, when combined with a plane assembly method.
   repository: https://github.com/alexandre-bry/GoCoPP
