@@ -2,7 +2,7 @@
 
 This is an implementation of the paper [Finding Good Configurations of Planar Primitives in Unorganized Point Clouds](https://hal.inria.fr/hal-03621896) by [Mulin Yu](http://www-sop.inria.fr/members/Mulin.Yu/) and [Florent Lafarge](http://www-sop.inria.fr/members/Florent.Lafarge/).
 
-This repository is a fork of [Ylannl/GoCoPP](https://github.com/Ylannl/GoCoPP) aiming at improving reproducibility and publishing the code as a conda package.
+This repository is a fork of [Ylannl/GoCoPP](https://github.com/Ylannl/GoCoPP) aiming at improving reproducibility using pixi.
 
 ## Citation
 
