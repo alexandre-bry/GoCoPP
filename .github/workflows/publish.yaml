@@ -12,8 +12,8 @@ jobs:
           pixi-version: v0.81.0
           cache: true
       - run: |
-          pixi publish --target-platform linux-64 --target-dir ./package_to_publish
-          pixi publish --target-platform linux-aarch64 --target-dir ./package_to_publish
+          pixi publish --target-platform linux-64 --target-dir ./package_to_publish --force
+          pixi publish --target-platform linux-aarch64 --target-dir ./package_to_publish --force
           pixi upload prefix --channel alexandre-bry/publish ./package_to_publish/*.conda --api-key ${{ secrets.PREFIX_API_KEY }}
 
   # build-windows:
