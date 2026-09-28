@@ -10,7 +10,7 @@ int main(int argc, char *argv[])
 		std::cout << "Usage: " << argv[0] << " <input_file> [options]" << std::endl;
 	}
 	std::string path_point_cloud = argv[1];
-	std::optional<std::string> path_output = std::nullopt;
+	std::string path_dir_output = boost::filesystem::path(path_point_cloud).parent_path().string();
 	
 	double pd_epsilon = 0;
 	char parameter[1024];
@@ -32,8 +32,8 @@ int main(int argc, char *argv[])
 	bool pd_if_constraint = false;
 	int pd_weight_mode = 0;
 	while (rr < argc) {
-		if (!strcmp(argv[rr], "--output") && rr + 1 < argc) {
-			path_output = argv[rr + 1];
+		if (!strcmp(argv[rr], "--output_dir") && rr + 1 < argc) {
+			path_dir_output = argv[rr + 1];
 			
 
 			rr += 2;
@@ -136,7 +136,7 @@ int main(int argc, char *argv[])
 		return 0;
 	}
 
-	CS = new Shape_Detector(path_point_cloud, path_output);
+	CS = new Shape_Detector(path_point_cloud, path_dir_output);
 	CS->set_detection_parameters(pd_sigma,  pd_nn, pd_normal_deviation);
 	
 	CS->set_max_steps(stop_iterations);
@@ -243,7 +243,6 @@ int main(int argc, char *argv[])
 
 		double t_all = double(t_end - t_start) / CLOCKS_PER_SEC;
 		CS->show_result(t_all);
-
 		CS->set_primitives_simple();
 		if (pd_out_convex_hull) {
 			CS->save_convex_hull();

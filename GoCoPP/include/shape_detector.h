@@ -96,7 +96,7 @@ class Shape_Detector
 
 
 public:
-	Shape_Detector(const std::string & _filename, const std::optional<std::string> &_output_file);
+	Shape_Detector(const std::string & _filename, const std::string &_output_dir);
 
 	~Shape_Detector();
 
@@ -248,7 +248,7 @@ protected:
 	std::string path_point_cloud;
 	std::string path_point_cloud_basename;
 	std::string path_point_cloud_extension;
-	std::optional<std::string> path_output;
+	std::string path_dir_output;
 
 	Pwn_vector points;
 

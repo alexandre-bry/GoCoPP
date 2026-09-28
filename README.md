@@ -38,12 +38,12 @@ cd GoCoPP
 # Build (not necessary since `pixi run run` will build the project if needed)
 pixi run build
 # Run
-pixi run run <input_file> --output <output_file> <..options>
+pixi run run <input_file> --output_dir <output_dir> <..options>
 ```
 
 ## Parameters
 
-- The parameter `--output` is the output file path. If not specified, it will be created automatically based on the input name and the parameters, and located in the running folder.
+- The parameter `--output_dir` is the output directory where the output file(s) will be written. If not specified, it will be the current directory. The file name is created automatically based on the input name and the parameters.
 - The parameter `--epsilon` is the fitting tolerance that specifies the maximal distance of an inlier to its supporting plane (default `0.4% * bounding box diagonal`).
 - The parameter `--sigma` is the minimal primitive size that allows primitives with a too low number of inliers to be discarded (default `50`).
 - The parameter `--nn` is the k of the k-nearest neighbour graph and also used to estimate the points' normals if they are not provided (default `20`).

@@ -12,7 +12,7 @@
 #include <optional>
 #include <random>
 
-Shape_Detector::Shape_Detector(const std::string & _filename, const std::optional<std::string> &_output_file)
+Shape_Detector::Shape_Detector(const std::string & _filename, const std::string &_output_dir)
 {
 	number_of_insert_exclude = 10;
 	number_iterations = 0;
@@ -22,7 +22,7 @@ Shape_Detector::Shape_Detector(const std::string & _filename, const std::optiona
 	path_point_cloud = _filename;
 	path_point_cloud_basename = boost::filesystem::path(path_point_cloud).stem().string();
 	path_point_cloud_extension = boost::filesystem::path(path_point_cloud).extension().string();
-	path_output = _output_file;
+	path_dir_output = _output_dir;
 
 	lambda_r = 1.0;
 	weight_mode = 0;
@@ -187,11 +187,9 @@ void Shape_Detector::to_vg()
 				// Prints a vg file
 
 			
-				std::string filename = "./" + path_point_cloud_basename + "_planar_primitives_detection.vg";
-				if (path_output) {
-					filename = *path_output;
-					std::filesystem::create_directories(std::filesystem::path(filename).parent_path());
-				}
+				std::string filename = path_dir_output + "/" + path_point_cloud_basename + "_planar_primitives_detection.vg";
+				std::filesystem::create_directories(std::filesystem::path(filename).parent_path());
+				
 				std::ofstream stream(filename, std::ios::out);
 
 				// Step 3.3.1
@@ -466,11 +464,9 @@ void Shape_Detector::save_convex_hull() {
 		
 	}
 
-	std::string filename = "./" + path_point_cloud_basename + "_convex_hull.ply";
-	if (path_output) {
-		filename = *path_output;
-		std::filesystem::create_directories(std::filesystem::path(filename).parent_path());
-	}
+	std::string filename = path_dir_output + "/" + path_point_cloud_basename + "_convex_hull.ply";
+	std::filesystem::create_directories(std::filesystem::path(filename).parent_path());
+
 	std::ofstream stream(filename, std::ios::out);
 	if (!stream.is_open()) {
 		throw std::ios_base::failure("Error : cannot write into an output file");
@@ -541,12 +537,9 @@ void Shape_Detector::save_alpha_shapes() {
 				}
 			}
 		}
+	std::string filename = path_dir_output + "/" + path_point_cloud_basename + "_alpha_shape.ply";
+	std::filesystem::create_directories(std::filesystem::path(filename).parent_path());
 
-	std::string filename = "./" + path_point_cloud_basename + "_alpha_shape.ply";
-	if (path_output) {
-		filename = *path_output;
-		std::filesystem::create_directories(std::filesystem::path(filename).parent_path());
-	}
 	std::ofstream stream(filename, std::ios::out);
 	if (!stream.is_open()) {
 		throw std::ios_base::failure("Error : cannot write into an output file");
@@ -6262,7 +6255,7 @@ void Shape_Detector::set_primitives_simple()
 		}
 
 		Alpha_Shape as(p2d.begin(), p2d.end());
-		as.set_alpha(double(0.005 * bbox_diagonal));
+		as.set_alpha(double(5.0));
 
 		int ind_min = alpha_shapes_pts.size();
 
