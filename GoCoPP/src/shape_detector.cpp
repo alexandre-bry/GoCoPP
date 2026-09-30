@@ -11,6 +11,7 @@
 #include <filesystem>
 #include <optional>
 #include <random>
+#include <string>
 
 Shape_Detector::Shape_Detector(const std::string & _filename, const std::string &_output_dir)
 {
@@ -28,6 +29,7 @@ Shape_Detector::Shape_Detector(const std::string & _filename, const std::string 
 	weight_mode = 0;
 	lambda_c = 1.0;
 	knn = -1;
+	alpha_val = std::nullopt;
 	should_compute_knn = true;
 	should_compute_neighborhood = true;
 
@@ -425,6 +427,10 @@ void Shape_Detector::set_epsilon(double _rg_epsilon) {
 	
 }
 
+
+void Shape_Detector::set_alpha_val(std::optional<double> _alpha_val) {
+	alpha_val = _alpha_val;
+}
 
 
 
@@ -6208,6 +6214,15 @@ void Shape_Detector::set_primitives_simple()
 	
 	clock_t t_start = clock();
 
+	// Compute the alpha for alpha shape
+	double alpha;
+	if (alpha_val.has_value()) {
+		alpha = alpha_val.value();
+	} else {
+		alpha = double(0.005 * bbox_diagonal);
+	}
+	std::cout << "Alpha shape with alpha=" << alpha << std::endl;
+
 	std::vector<Inexact_Plane> planes_3;
 	std::default_random_engine generator;
 	std::uniform_int_distribution<int> uniform_distribution(100, 225);
@@ -6255,7 +6270,7 @@ void Shape_Detector::set_primitives_simple()
 		}
 
 		Alpha_Shape as(p2d.begin(), p2d.end());
-		as.set_alpha(double(5.0));
+		as.set_alpha(alpha);
 
 		int ind_min = alpha_shapes_pts.size();
 

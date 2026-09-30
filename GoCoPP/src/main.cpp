@@ -2,6 +2,8 @@
 #include "shape_detector.h"
 
 #include <boost/filesystem.hpp>
+#include <optional>
+// #include <iostream>
 
 
 int main(int argc, char *argv[])
@@ -25,6 +27,7 @@ int main(int argc, char *argv[])
 	bool pd_out_vg = false;
 	bool pd_out_alpha_shape = true;
 	bool pd_out_convex_hull = false;
+	std::optional<double> alpha_val = std::nullopt; 
 	
 	
 	//std::string path_point_cloud = "D:/planar_shape_detection_command/build/bin/Release/torus-100K.ply";
@@ -112,6 +115,12 @@ int main(int argc, char *argv[])
 
 			rr += 1;
 		}
+		else if (!strcmp(argv[rr], "--alpha_val") && rr + 1 < argc) {
+			alpha_val = atoi(argv[rr + 1]);
+
+
+			rr += 2;
+		}
 		else if (!strcmp(argv[rr], "--hull")) {
 			pd_out_convex_hull = true;
 
@@ -142,6 +151,7 @@ int main(int argc, char *argv[])
 	CS->set_max_steps(stop_iterations);
 	CS->set_weight_m(pd_weight_mode);
 	CS->set_constraint(pd_if_constraint);
+	CS->set_alpha_val(alpha_val);
 	
 	CS->set_lambda_r(pd_s);
 	CS->set_lambda_c(pd_c);

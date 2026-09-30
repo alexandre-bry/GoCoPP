@@ -52,7 +52,8 @@ pixi run run <input_file> --output_dir <output_dir> <..options>
 - The parameter `--norm` decide the fidelity metric, which can be `normal`, `L2` or `hybrid` (default `hybrid`). `L2` represents the Euclidean distance between the inlier points and the associated supporting planes, `normal` presents the deviation between inliers' normals and the associated supporting planes' normals and `hybrid` mode uses `L2` in the priority queue and `normal` in the transfer operator.
 - The parameter `--max_steps` is the maximum iterations of our exploration mechanism (default `7`).
 - The parameter `--constraint` is an option to make sure that the final configuration does not degrade the fidelity, simplicity and completeness of the initial configuration (default `False`).
-- The parameter `--vg` is an option to output the results in 'vg' form([Vertex Group](https://github.com/LiangliangNan/PolyFit/blob/main/ReadMe.md#data)) (default `False`).
-- The parameter `--alpha` is an option to output the primitives that are represented as alpha shapes (default `True`).
-- The parameter `--hull` is an option to output the primitives that are represented as convex hulls (default `False`).
+- The flag `--vg` is an option to output the results in 'vg' form([Vertex Group](https://github.com/LiangliangNan/PolyFit/blob/main/ReadMe.md#data)) (default `False`).
+- The flag `--alpha` is an option to output the primitives that are represented as alpha shapes (default `True`).
+- The parameter `--alpha_val` allows to set the alpha value for the alpha shapes (default `0.005 * bbox_diagonal`).
+- The flag `--hull` is an option to output the primitives that are represented as convex hulls (default `False`).
 

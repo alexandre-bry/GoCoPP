@@ -122,6 +122,7 @@ public:
 	void set_lambda_c(double db);
 	void set_detection_parameters(int _min_points,  int _knn, double _normal_threshold);
 	void set_epsilon(double _rg_epsilon);
+	void set_alpha_val(std::optional<double> _alpha_val);
 	void detect_shapes();
 
 protected:
@@ -273,6 +274,7 @@ protected:
 	double bbox_diagonal;
 	double average_spacing;
 	bool spacing_is_known;
+	std::optional<double> alpha_val;
 	
 	int t_l;
 	double epsilon;
