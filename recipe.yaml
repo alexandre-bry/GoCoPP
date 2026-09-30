@@ -12,9 +12,9 @@ build:
     python "recipe/patch_cgal.py" || echo "CGAL patch skipped"
 
     # Build with CMake (cross-platform)
-    cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$PREFIX
-    cmake --build build --config Release
-    cmake --install build --prefix $PREFIX
+    cmake -S . -B build_publish -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$PREFIX
+    cmake --build build_publish --config Release
+    cmake --install build_publish --prefix $PREFIX
 
 requirements:
   build:
