@@ -12,7 +12,7 @@ build:
     python "recipe/patch_cgal.py" || echo "CGAL patch skipped"
 
     # Build with CMake (cross-platform)
-    cmake -S . -B build_publish -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$PREFIX
+    cmake -S . -B build_publish -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=$PREFIX -DCMAKE_INSTALL_PREFIX=$PREFIX
     cmake --build build_publish --config Release
     cmake --install build_publish --prefix $PREFIX
 
@@ -26,6 +26,7 @@ requirements:
     - cgal >=5.6,<6
     - eigen >=3.4.0,<4
     - boost-cpp >=1.76
+    - cli11 >=2.4,<3
   run:
     - cgal >=5.6,<6
     - eigen >=3.4.0,<4
