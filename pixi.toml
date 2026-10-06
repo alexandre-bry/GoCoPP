@@ -22,6 +22,7 @@ cgal = ">=5.6,<6"
 cmake = ">=3.10,<4"
 eigen = ">=3.4.0,<4"
 gxx = ">=16.2.0,<16.3"
+cli11 = ">=2.4.0,<3"
 
 [activation.env]
 CPP_DIR = "$PIXI_PROJECT_ROOT/GoCoPP"

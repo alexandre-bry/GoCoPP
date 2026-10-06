@@ -60,6 +60,42 @@ else()
     message(FATAL_ERROR "Boost not found")
 endif()
 
+# ---------- CLI11 ----------
+
+# Set up CLI11 paths - for pixi environments, it's typically in .pixi/envs/default/include
+# Since CMAKE_SOURCE_DIR points to GoCoPP/GoCoPP, we need to go up one level to get to the project root
+get_filename_component(PROJECT_ROOT_DIR "${CMAKE_SOURCE_DIR}/.." ABSOLUTE)
+set(CLI11_INCLUDE_DIR "${PROJECT_ROOT_DIR}/.pixi/envs/default/include")
+
+# Check if CLI/CLI.hpp exists in the expected location
+if(EXISTS "${CLI11_INCLUDE_DIR}/CLI/CLI.hpp")
+    include_directories(${CLI11_INCLUDE_DIR})
+    message(STATUS "Using CLI11")
+    set(cli11_FOUND TRUE)
+else()
+    # Try alternative paths
+    set(CLI11_ALTERNATIVE_PATHS
+        "$ENV{PIXI_ENV_PREFIX}/include"
+        "$ENV{PREFIX}/include"
+        "/usr/include"
+        "/usr/local/include"
+    )
+    
+    foreach(path IN LISTS CLI11_ALTERNATIVE_PATHS)
+        if(EXISTS "${path}/CLI/CLI.hpp")
+            set(CLI11_INCLUDE_DIR "${path}")
+            include_directories(${CLI11_INCLUDE_DIR})
+            message(STATUS "Using CLI11")
+            set(cli11_FOUND TRUE)
+            break()
+        endif()
+    endforeach()
+    
+    if(NOT cli11_FOUND)
+        message(FATAL_ERROR "CLI11 not found at ${CLI11_INCLUDE_DIR}/CLI/CLI.hpp or alternative paths. Install with: pixi add cli11")
+    endif()
+endif()
+
 # ---------- CGAL ----------
 
 find_package(CGAL REQUIRED)
@@ -93,3 +129,9 @@ endif()
 # Install the executable
 set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME gocopp)
 install(TARGETS ${PROJECT_NAME} DESTINATION bin)
+
+### For clangd
+# Libraries installed by pixi
+set(PIXI_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/../.pixi/envs/default/include)
+target_compile_options(${PROJECT_NAME} PRIVATE -I${PIXI_INCLUDE_DIR})
+target_compile_options(${PROJECT_NAME} PRIVATE -I${PIXI_INCLUDE_DIR}/eigen3)
