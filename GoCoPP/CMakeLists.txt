@@ -60,3 +60,10 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
 
 set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME gocopp)
 install(TARGETS ${PROJECT_NAME} DESTINATION bin)
+
+### For clangd
+# Libraries installed by pixi
+set(PIXI_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/../.pixi/envs/default/include)
+target_compile_options(${PROJECT_NAME} PRIVATE -I${CMAKE_SOURCE_DIR}/include)
+target_compile_options(${PROJECT_NAME} PRIVATE -I${PIXI_INCLUDE_DIR})
+target_compile_options(${PROJECT_NAME} PRIVATE -I${PIXI_INCLUDE_DIR}/eigen3)
