@@ -27,6 +27,8 @@ requirements:
     - eigen >=3.4.0,<4
     - boost-cpp >=1.76
     - cli11 >=2.4,<3
+    - nlohmann_json >=3.11,<4
+    - points-planes-eval >=0.3.0,<0.4
   run:
     - cgal >=5.6,<6
     - eigen >=3.4.0,<4

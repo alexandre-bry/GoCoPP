@@ -101,9 +101,12 @@ class Shape_Detector {
 
   public:
     void set_lambda_r(double db);
+    void set_lambda_c(double db);
     void set_weight_m(int wm);
     void set_max_steps(int wm);
-    void set_lambda_c(double db);
+    void set_number_of_insert_exclude(uint _number_of_insert_exclude) {
+        number_of_insert_exclude = _number_of_insert_exclude;
+    }
     void set_detection_parameters(int _min_points, int _knn,
                                   double _normal_threshold);
     void set_epsilon(double _rg_epsilon);
@@ -213,6 +216,9 @@ class Shape_Detector {
     void to_vg();
     void save_alpha_shapes();
     void save_convex_hull();
+    void save_vg_json();
+
+    void set_verbose(bool _verbose) { verbose = _verbose; }
 
     void set_constraint(bool cc);
 
@@ -281,6 +287,8 @@ class Shape_Detector {
     double neighborhood_distance;
     bool should_compute_neighborhood;
     std::vector<std::set<int>> neighbors;
+
+    bool verbose;
 
     bool if_constraint;
 
@@ -365,7 +373,7 @@ class Shape_Detector {
     double old_mean_normal_diaviation;
 
     double old_coverage;
-    int number_of_insert_exclude;
+    uint number_of_insert_exclude;
 
     std::vector<int> if_insert_candidate;
     double mean_distance_diaviation_before_transfer;

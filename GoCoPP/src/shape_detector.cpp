@@ -12,6 +12,9 @@
 #include <random>
 #include <string>
 
+#include <points_planes_eval/io.hpp>
+#include <points_planes_eval/metrics.hpp>
+
 Shape_Detector::Shape_Detector(const std::string &_filename,
                                const std::string &_output_dir) {
     number_of_insert_exclude = 10;
@@ -168,8 +171,10 @@ void Shape_Detector::to_vg() {
                     S_inl_curr.push_back(I_p);
                 }
 
-                std::cout << "[" << i << ", " << j << ", " << k
-                          << "] : " << S_eq_curr.size() << std::endl;
+                if (verbose) {
+                    std::cout << "[" << i << ", " << j << ", " << k
+                              << "] : " << S_eq_curr.size() << std::endl;
+                }
 
                 // Step 3.3
                 // Prints a vg file
@@ -285,11 +290,13 @@ bool Shape_Detector::load_ply() {
         }
     }
     if (points[0].second == Inexact_Vector_3(0, 0, 0)) {
-        std::cout << std::endl;
-        std::cout
-            << "The Input PLY file does not contain 'Normals' or contains "
-               "invalid 'Normals', The 'Normals' will be estimated."
-            << std::endl;
+        if (verbose) {
+            std::cout << std::endl;
+            std::cout
+                << "The Input PLY file does not contain 'Normals' or contains "
+                   "invalid 'Normals', The 'Normals' will be estimated."
+                << std::endl;
+        }
 
         CGAL::pca_estimate_normals<Concurrency_tag>(
             points,
@@ -318,12 +325,14 @@ void Shape_Detector::compute_average_spacing_and_k_nearest_neighbors() {
     if (!spacing_is_known)
         average_spacing = 0;
 
-    std::cout << "Computing K nearest neighbors ";
+    if (verbose) {
+        std::cout << "Computing K nearest neighbors ";
+    }
 
     int ten_percent_of_points = points.size() / 10;
 
     for (int i = 0; i < points.size(); i++) {
-        if (i % ten_percent_of_points == 0)
+        if (verbose && i % ten_percent_of_points == 0)
             std::cout << ". " << std::flush;
 
         Inexact_Point_3 query = points[i].first;
@@ -358,11 +367,15 @@ void Shape_Detector::compute_average_spacing_and_k_nearest_neighbors() {
             average_spacing += dist_1st_neighbor;
     }
 
-    std::cout << std::endl;
+    if (verbose) {
+        std::cout << std::endl;
+    }
 
     if (!spacing_is_known) {
         average_spacing /= double(points.size());
-        std::cout << "Average spacing : " << average_spacing << std::endl;
+        if (verbose) {
+            std::cout << "Average spacing : " << average_spacing << std::endl;
+        }
         spacing_is_known = true;
     }
 
@@ -396,14 +409,15 @@ void Shape_Detector::set_extrema() {
             z_max = z;
     }
 
-    std::cout << "X : [" << x_min << ", " << x_max << "]" << std::endl;
-    std::cout << "Y : [" << y_min << ", " << y_max << "]" << std::endl;
-    std::cout << "Z : [" << z_min << ", " << z_max << "]" << std::endl;
-
     double dx = x_max - x_min, dy = y_max - y_min, dz = z_max - z_min;
     bbox_diagonal = sqrt(dx * dx + dy * dy + dz * dz);
 
-    std::cout << "Bounding box diagonal : " << bbox_diagonal << std::endl;
+    if (verbose) {
+        std::cout << "X : [" << x_min << ", " << x_max << "]" << std::endl;
+        std::cout << "Y : [" << y_min << ", " << y_max << "]" << std::endl;
+        std::cout << "Z : [" << z_min << ", " << z_max << "]" << std::endl;
+        std::cout << "Bounding box diagonal : " << bbox_diagonal << std::endl;
+    }
 }
 
 void Shape_Detector::set_detection_parameters(int _rg_min_points, int _knn,
@@ -585,6 +599,39 @@ void Shape_Detector::save_alpha_shapes() {
 
     stream << std::endl;
     stream.close();
+}
+
+void Shape_Detector::save_vg_json() {
+    PointsPlanesEval::PointCloudPlanes config;
+
+    // All points of the cloud, with labels[i] the plane index points[i]
+    // belongs to, or -1 when the point is not assigned to any plane.
+    config.points.reserve(points.size());
+    config.labels.assign(points.size(), -1);
+    for (const Point_with_normal &pwn : points) {
+        const Inexact_Point_3 &pt = pwn.first;
+        config.points.push_back(
+            PointsPlanesEval::Point3{pt.x(), pt.y(), pt.z()});
+    }
+
+    config.planes.reserve(planes_to_inliers.size());
+    for (size_t p = 0; p < planes_to_inliers.size(); ++p) {
+        const Inexact_Plane &P = planes_2[p];
+
+        config.planes.push_back(
+            PointsPlanesEval::PlaneParams{P.a(), P.b(), P.c(), P.d()});
+
+        for (int pt_index : planes_to_inliers[p]) {
+            config.labels[pt_index] = static_cast<int>(p);
+        }
+    }
+
+    std::string filename = path_dir_output + "/" + path_point_cloud_basename +
+                           "_planes_association.json";
+    std::filesystem::create_directories(
+        std::filesystem::path(filename).parent_path());
+
+    PointsPlanesEval::write_output(config, filename);
 }
 
 void Shape_Detector::save_infor_to_txt_right_folder(std::string name) {
@@ -3073,8 +3120,8 @@ void Shape_Detector::local_operators() {
                                     if_merged[this_pair[1]] != 0) ||
                                    (if_merged[this_pair[0]] != 0 &&
                                     if_merged[this_pair[1]] ==
-                                        0)) { // when only one primitive is
-                                              // merged.
+                                        0)) { // when only one
+                                              // primitive is merged.
 
                             std::pair<std::pair<int, std::vector<int>>,
                                       std::vector<double>>
@@ -4242,9 +4289,9 @@ void Shape_Detector::local_operators_normal() {
                 int s = this_pair[1];
                 if ((planes_to_inliers[f].size() + planes_to_inliers[s].size() +
                      2 - this_pair.size()) <
-                    min_points) { // when the new primitives have less point
-                                  // than threshold, the operation will be
-                                  // ignoed.
+                    min_points) { // when the new primitives have
+                                  // less point than threshold, the
+                                  // operation will be ignoed.
                     p_q.pop();
                     continue;
                 }
@@ -4558,8 +4605,8 @@ void Shape_Detector::local_operators_normal() {
                                     if_merged[this_pair[1]] != 0) ||
                                    (if_merged[this_pair[0]] != 0 &&
                                     if_merged[this_pair[1]] ==
-                                        0)) { // when only one primitive is
-                                              // merged.
+                                        0)) { // when only one
+                                              // primitive is merged.
 
                             std::pair<std::pair<int, std::vector<int>>,
                                       std::vector<double>>
@@ -5302,32 +5349,39 @@ void Shape_Detector::local_operators_normal() {
 }
 
 void Shape_Detector::show_result(double t) {
-    std::cout << std::endl;
-    std::cout << "***All operators: " << t << " s." << std::endl;
-    std::cout << "**Transfer operator: " << all_t_transfer << " times"
-              << std::endl;
-    std::cout << "**Merge operator: " << all_t_merge << " times" << std::endl;
+    if (verbose) {
+        std::cout << std::endl;
+        std::cout << "***All operators: " << t << " s." << std::endl;
+        std::cout << "**Transfer operator: " << all_t_transfer << " times"
+                  << std::endl;
+        std::cout << "**Merge operator: " << all_t_merge << " times"
+                  << std::endl;
 
-    std::cout << "**Split operator: " << all_t_split << " times" << std::endl;
+        std::cout << "**Split operator: " << all_t_split << " times"
+                  << std::endl;
 
-    std::cout << "**Insert operator: " << all_t_insert << " times" << std::endl;
-    std::cout << "**Exclude operator: " << all_t_exlude << " times"
-              << std::endl;
-    std::cout << "**number of iterations: " << number_iterations << std::endl;
-    std::cout << "Primitives : " << (primitives_number) << std::endl;
-    std::cout << "Coverage  : " << (coverage) << std::endl;
-    std::cout << "Mean error : " << (mean_error) << std::endl;
-    std::cout << "Mean normal deviation : " << (mean_normal_diviation)
-              << std::endl;
+        std::cout << "**Insert operator: " << all_t_insert << " times"
+                  << std::endl;
+        std::cout << "**Exclude operator: " << all_t_exlude << " times"
+                  << std::endl;
+        std::cout << "**number of iterations: " << number_iterations
+                  << std::endl;
+        std::cout << "Primitives : " << (primitives_number) << std::endl;
+        std::cout << "Coverage  : " << (coverage) << std::endl;
+        std::cout << "Mean error : " << (mean_error) << std::endl;
+        std::cout << "Mean normal deviation : " << (mean_normal_diviation)
+                  << std::endl;
 
-    std::cout << "Primitives reducing : "
-              << (last_primitives_number - primitives_number) << std::endl;
-    std::cout << "Coverage adding   : " << (coverage - last_coverage)
-              << std::endl;
-    std::cout << "Mean error reducing : " << (last_mean_error - mean_error)
-              << std::endl;
-    std::cout << "Mean normal deviation adding : "
-              << (mean_normal_diviation - last_normal_deviation) << std::endl;
+        std::cout << "Primitives reducing : "
+                  << (last_primitives_number - primitives_number) << std::endl;
+        std::cout << "Coverage adding   : " << (coverage - last_coverage)
+                  << std::endl;
+        std::cout << "Mean error reducing : " << (last_mean_error - mean_error)
+                  << std::endl;
+        std::cout << "Mean normal deviation adding : "
+                  << (mean_normal_diviation - last_normal_deviation)
+                  << std::endl;
+    }
 }
 
 void Shape_Detector::get_last_information() {
@@ -5341,10 +5395,12 @@ void Shape_Detector::do_region_growing() {
     int class_index = -1;
     int ten_percent_of_points = points.size() / 10;
 
-    std::cout << "Region growing " << points.size() << std::endl;
+    if (verbose) {
+        std::cout << "Region growing " << points.size() << std::endl;
+    }
 
     for (size_t i = 0; i < points.size(); i++) {
-        if (i % ten_percent_of_points == 0)
+        if (verbose && i % ten_percent_of_points == 0)
             std::cout << ". " << std::flush;
 
         if (inliers_to_planes[i] == -1) {
@@ -5551,10 +5607,13 @@ void Shape_Detector::detect_planes() {
     // export_region_growing_results();
 
     clock_t t_detect_end = clock();
-    std::cout << std::endl
-              << "** Plane detection : done in "
-              << double(t_detect_end - t_detect_start) / CLOCKS_PER_SEC << " s."
-              << std::endl;
+
+    if (verbose) {
+        std::cout << std::endl
+                  << "** Plane detection : done in "
+                  << double(t_detect_end - t_detect_start) / CLOCKS_PER_SEC
+                  << " s." << std::endl;
+    }
 }
 
 bool Shape_Detector::inliers_arent_aligned(const std::vector<int> &inds) {
@@ -5596,11 +5655,13 @@ void Shape_Detector::get_coverage_and_mean_error() {
 
     coverage = double(number_of_assigned_points) / double(points.size());
     primitives_number = planes_to_inliers.size();
-    std::cout << "Primitives : " << primitives_number << std::endl;
-    std::cout << "Coverage   : " << coverage << std::endl;
-    std::cout << "Mean error : " << mean_error << std::endl;
-    std::cout << "Mean normal deviation     : " << mean_normal_diviation
-              << std::endl;
+    if (verbose) {
+        std::cout << "Primitives : " << primitives_number << std::endl;
+        std::cout << "Coverage   : " << coverage << std::endl;
+        std::cout << "Mean error : " << mean_error << std::endl;
+        std::cout << "Mean normal deviation     : " << mean_normal_diviation
+                  << std::endl;
+    }
 }
 
 void Shape_Detector::get_coverage_and_mean_error_pure() {
@@ -5684,28 +5745,30 @@ void Shape_Detector::get_distance_diviation_show_normal_info(double t) {
     double new_coverage =
         double(number_of_assigned_points) / double(points.size());
 
-    std::cout << std::endl;
+    if (verbose) {
+        std::cout << std::endl;
 
-    std::cout << "** Transfer operator: " << t << " s." << std::endl;
-    std::cout << "Primitives : " << (size_current_primitives) << std::endl;
+        std::cout << "** Transfer operator: " << t << " s." << std::endl;
+        std::cout << "Primitives : " << (size_current_primitives) << std::endl;
 
-    std::cout << "Coverage  : " << (new_coverage) << std::endl;
-    std::cout << "Mean error : " << (mean_distance_diaviation) << std::endl;
-    std::cout << "Mean normal deviation : " << (mean_normal_diviation)
-              << std::endl;
+        std::cout << "Coverage  : " << (new_coverage) << std::endl;
+        std::cout << "Mean error : " << (mean_distance_diaviation) << std::endl;
+        std::cout << "Mean normal deviation : " << (mean_normal_diviation)
+                  << std::endl;
 
-    std::cout << "Primitives reducing : "
-              << (old_size_current_primitives - size_current_primitives)
-              << std::endl;
+        std::cout << "Primitives reducing : "
+                  << (old_size_current_primitives - size_current_primitives)
+                  << std::endl;
 
-    std::cout << "Coverage adding   : " << new_coverage - old_coverage
-              << std::endl;
-    std::cout << "Mean error reducing : "
-              << (old_mean_distance_diaviation - mean_distance_diaviation)
-              << std::endl;
-    std::cout << "Mean normal deviation adding : "
-              << (mean_normal_diviation - old_mean_normal_diaviation)
-              << std::endl;
+        std::cout << "Coverage adding   : " << new_coverage - old_coverage
+                  << std::endl;
+        std::cout << "Mean error reducing : "
+                  << (old_mean_distance_diaviation - mean_distance_diaviation)
+                  << std::endl;
+        std::cout << "Mean normal deviation adding : "
+                  << (mean_normal_diviation - old_mean_normal_diaviation)
+                  << std::endl;
+    }
 
     old_size_current_primitives = size_current_primitives;
     old_mean_distance_diaviation = mean_distance_diaviation;
@@ -5746,32 +5809,36 @@ void Shape_Detector::get_distance_diviation_show_merge_info(double t) {
     double new_coverage =
         double(number_of_assigned_points) / double(points.size());
 
-    std::cout << std::endl;
-    std::cout << "** Local operators: " << t << " s." << std::endl;
-    std::cout << "* Merge operators: " << t_merge << " times." << std::endl;
-    std::cout << "* Split operators: " << t_split << " times." << std::endl;
-    std::cout << "* Insert operators: " << t_insert << " times." << std::endl;
-    std::cout << "* Exclude operators: " << t_exlude << " times." << std::endl;
+    if (verbose) {
+        std::cout << std::endl;
+        std::cout << "** Local operators: " << t << " s." << std::endl;
+        std::cout << "* Merge operators: " << t_merge << " times." << std::endl;
+        std::cout << "* Split operators: " << t_split << " times." << std::endl;
+        std::cout << "* Insert operators: " << t_insert << " times."
+                  << std::endl;
+        std::cout << "* Exclude operators: " << t_exlude << " times."
+                  << std::endl;
 
-    std::cout << "Primitives : " << (size_current_primitives) << std::endl;
+        std::cout << "Primitives : " << (size_current_primitives) << std::endl;
 
-    std::cout << "Coverage  : " << (new_coverage) << std::endl;
-    std::cout << "Mean error : " << (mean_distance_diaviation) << std::endl;
-    std::cout << "Mean normal deviation : " << (mean_normal_diviation)
-              << std::endl;
+        std::cout << "Coverage  : " << (new_coverage) << std::endl;
+        std::cout << "Mean error : " << (mean_distance_diaviation) << std::endl;
+        std::cout << "Mean normal deviation : " << (mean_normal_diviation)
+                  << std::endl;
 
-    std::cout << "Primitives reducing : "
-              << (old_size_current_primitives - size_current_primitives)
-              << std::endl;
+        std::cout << "Primitives reducing : "
+                  << (old_size_current_primitives - size_current_primitives)
+                  << std::endl;
 
-    std::cout << "Coverage adding   : " << new_coverage - old_coverage
-              << std::endl;
-    std::cout << "Mean error reducing : "
-              << (old_mean_distance_diaviation - mean_distance_diaviation)
-              << std::endl;
-    std::cout << "Mean normal deviation adding : "
-              << (mean_normal_diviation - old_mean_normal_diaviation)
-              << std::endl;
+        std::cout << "Coverage adding   : " << new_coverage - old_coverage
+                  << std::endl;
+        std::cout << "Mean error reducing : "
+                  << (old_mean_distance_diaviation - mean_distance_diaviation)
+                  << std::endl;
+        std::cout << "Mean normal deviation adding : "
+                  << (mean_normal_diviation - old_mean_normal_diaviation)
+                  << std::endl;
+    }
 
     old_size_current_primitives = size_current_primitives;
     old_mean_distance_diaviation = mean_distance_diaviation;
@@ -6039,7 +6106,8 @@ double Shape_Detector::remove_changed_error(int id,
         }
     }
 
-    // befor_ids.insert(befor_ids.end(), point_ids.begin(), point_ids.end());
+    // befor_ids.insert(befor_ids.end(), point_ids.begin(),
+    // point_ids.end());
 
     std::vector<Inexact_Point_3> after_points;
 
@@ -6130,7 +6198,8 @@ double Shape_Detector::remove_changed_error_normal(int id,
     double dif_befor = 0;
     std::vector<int> after_ids;
     for (int u : befor_ids) {
-        // dif_befor += sqrt(CGAL::squared_distance(befor_p, points[u].first));
+        // dif_befor += sqrt(CGAL::squared_distance(befor_p,
+        // points[u].first));
         dif_befor += abs(points[u].second * befor_p.orthogonal_vector());
 
         if (std::find(point_ids.begin(), point_ids.end(), u) ==
@@ -6243,7 +6312,9 @@ void Shape_Detector::set_primitives_simple() {
     } else {
         alpha = double(0.005 * bbox_diagonal);
     }
-    std::cout << "Alpha shape with alpha=" << alpha << std::endl;
+    if (verbose) {
+        std::cout << "Alpha shape with alpha=" << alpha << std::endl;
+    }
 
     std::vector<Inexact_Plane> planes_3;
     std::default_random_engine generator;
@@ -6319,8 +6390,9 @@ void Shape_Detector::set_primitives_simple() {
 
             CDT2::Vertex_handle v1 = pVMap[as.segment(*eit).source()];
             CDT2::Vertex_handle v2 = pVMap[as.segment(*eit).target()];
-            if (!v1->is_valid() || !v2->is_valid())
+            if (verbose && !v1->is_valid() || !v2->is_valid()) {
                 std::cout << "invalid!" << std::endl;
+            }
 
             eit++;
         }

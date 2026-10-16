@@ -1,7 +1,7 @@
 [workspace]
-channels = ["conda-forge"]
+channels = ["https://prefix.dev/alexandre-bry/publish", "conda-forge"]
 name = "GoCoPP"
-platforms = ["linux-64", "linux-aarch64", "win-64", "osx-64", "osx-arm64"]
+platforms = ["linux-64", "linux-aarch64", "win-64", "osx-arm64"]
 version = "0.1.0"
 preview = ["pixi-build"]
 license = "BSD-3-Clause"
@@ -18,11 +18,14 @@ license = "BSD-3-Clause"
 backend = { name = "pixi-build-rattler-build", version = "*" }
 
 [dependencies]
-cgal = ">=5.6,<6"
+cxx-compiler = ">=2.0.0,<3"
 cmake = ">=3.10,<4"
+ninja = ">=1.13.2,<2"
+cgal = ">=5.6,<6"
 eigen = ">=3.4.0,<4"
-gxx = ">=16.2.0,<16.3"
 cli11 = ">=2.4.0,<3"
+nlohmann_json = ">=3.11,<4"
+points-planes-eval = ">=0.3.0,<0.4"
 
 [activation.env]
 CPP_DIR = "$PIXI_PROJECT_ROOT/GoCoPP"
@@ -31,7 +34,9 @@ EXECUTABLE_PATH = "$CPP_DIR/build/bin/Release/gocopp"
 [tasks]
 clean = { cmd = "cd \"$INIT_CWD\" && rm -rf $CPP_DIR/build", cwd = ".", description = "Delete the build directory." }
 _setup_env = { cmd = "bash $CPP_DIR/recipe/patch_cgal.sh", cwd = ".", description = "Setup environment (apply CGAL patch for Boost 1.86+ compatibility)" }
-_cmake = { cmd = "cd \"$INIT_CWD\" && cmake -B $CPP_DIR/build -S $CPP_DIR -DCMAKE_BUILD_TYPE=Release -DCMAKE_EXPORT_COMPILE_COMMANDS=1 -Wno-dev", depends-on = ["_setup_env"] }
+_cmake = { cmd = "cd \"$INIT_CWD\" && cmake -G Ninja -B $CPP_DIR/build -S $CPP_DIR -DCMAKE_BUILD_TYPE=Release -DCMAKE_EXPORT_COMPILE_COMMANDS=1 -Wno-dev", depends-on = [
+    "_setup_env",
+] }
 build = { cmd = "cd \"$INIT_CWD\" && cmake --build $CPP_DIR/build", cwd = ".", depends-on = [
     "_cmake",
 ], description = "Build the C++ project." }
