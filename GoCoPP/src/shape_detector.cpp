@@ -6345,7 +6345,7 @@ void Shape_Detector::set_primitives_simple() {
         b2 = b2 * 1.0 / (sqrt(b2 * b2));
 
         std::vector<Inexact_Point_2> p2d;
-        std::map<Inexact_Point_2, int> vMap, vMap2;
+        std::map<Inexact_Point_2, int> vMap, vMap3d;
         std::vector<Inexact_Point_3> p3d;
 
         auto it = assigned_pts.begin();
@@ -6418,12 +6418,11 @@ void Shape_Detector::set_primitives_simple() {
                 for (int i = 0; i < 3; i++) {
                     Inexact_Point_2 p = fit->vertex(i)->point();
 
-                    // if point is used in cdt, copy it to
-                    if (vMap2.count(p) == 0) {
+                    // if point is used in cdt, copy it to p3d
+                    if (vMap3d.count(p) == 0) {
                         p3d.push_back(H.projection(assigned_pts[vMap[p]]));
 
-                        vMap2[p] = vMap[p];
-                        vMap[p] = p3d.size() - 1;
+                        vMap3d[p] = p3d.size() - 1;
                     }
                 }
 
@@ -6435,7 +6434,6 @@ void Shape_Detector::set_primitives_simple() {
         fit = cdt.finite_faces_begin();
         while (fit != cdt.finite_faces_end()) {
             int res;
-            // res = as.classify(fit);
             Inexact_Point_2 p1 = fit->vertex(0)->point();
             Inexact_Point_2 p2 = fit->vertex(1)->point();
             Inexact_Point_2 p3 = fit->vertex(2)->point();
@@ -6446,20 +6444,22 @@ void Shape_Detector::set_primitives_simple() {
                  1.0 / 3.0);
             res = as.classify(center);
             if (res == Alpha_Shape::INTERIOR) {
-                if (vMap.count(p1) == 0) {
+                // skips faces with a vertex never copied to p3d (the loop
+                // above skips collinear faces)
+                if (vMap3d.count(p1) == 0) {
                     continue;
                 }
-                if (vMap.count(p2) == 0) {
+                if (vMap3d.count(p2) == 0) {
                     continue;
                 }
-                if (vMap.count(p3) == 0) {
+                if (vMap3d.count(p3) == 0) {
                     continue;
                 }
 
                 std::vector<Inexact_Point_3> tr(3);
-                tr[0] = p3d[vMap[p1]];
-                tr[1] = p3d[vMap[p2]];
-                tr[2] = p3d[vMap[p3]];
+                tr[0] = p3d[vMap3d[p1]];
+                tr[1] = p3d[vMap3d[p2]];
+                tr[2] = p3d[vMap3d[p3]];
                 alpha_shapes_pts.push_back(tr);
                 alpha_shapes_colors.push_back(col);
 
